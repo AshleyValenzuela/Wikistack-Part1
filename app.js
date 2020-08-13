@@ -8,12 +8,25 @@ const staticMiddleware = express.static(path.join(__dirname, "public"));
 app.use(staticMiddleware);
 
 app.use(express.urlencoded());
+const layout = require("./views/layout");
+
+const { db, Page, User } = require("./models");
 
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.send(layout(""));
+});
+
+db.authenticate().then(() => {
+  console.log("connected to the database");
 });
 
 let PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-});
+
+const init = async () => {
+  await db.sync({ force: true });
+  app.listen(PORT, () => {
+    console.log(`App listening on port ${PORT}`);
+  });
+};
+
+init();
