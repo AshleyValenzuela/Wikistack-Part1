@@ -1,18 +1,36 @@
-
-const path = require('path');
 const express = require("express");
-const app = express()
-const morgan = require('morgan');
-const style = require('./views/layout')
-app.use(morgan('dev'));
-const staticMiddleware = express.static(path.join(__dirname, '/public'));
-app.use(express.urlencoded({ extended: false}));
+const app = express();
+const path = require("path");
+const morgan = require("morgan");
+app.use(morgan("dev"));
+
+const staticMiddleware = express.static(path.join(__dirname, "public"));
 app.use(staticMiddleware);
 
+app.use(express.urlencoded());
+const layout = require("./views/layout");
 
+const { db, Page, User } = require("./models");
 
-app.get("/", async (req, res) => {
-    res.send(style(""))
+app.get("/", (req, res) => {
+  res.send(layout(""));
 });
 
-app.listen(3000)
+db.authenticate().then(() => {
+  console.log("connected to the database");
+});
+
+const wikiRouter = require('./routes/wiki')
+const usersRouter = require('./routes/users')
+app.use('/wiki', wikiRouter)
+
+let PORT = 3000;
+
+const init = async () => {
+  await db.sync({ force: true });
+  app.listen(PORT, () => {
+    console.log(`App listening on port ${PORT}`);
+  });
+};
+
+init();
